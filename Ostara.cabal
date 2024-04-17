@@ -29,6 +29,7 @@ executable Ostara
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
+    other-modules: FOL Cnf Resolution Subst
     build-depends:    base ^>=4.15.1.0
     hs-source-dirs:   app
     default-language: Haskell2010

@@ -13,8 +13,8 @@ data FOL = Impl FOL FOL |
            Or FOL FOL | And FOL FOL |
            Exists (Term -> FOL) | Forall (Term -> FOL)
 
-data Clause = ORL [FOL] deriving (Show)
-data CNF = ANDL [Clause] deriving (Show)
+data Clause = ORL [FOL] deriving (Show, Eq)
+data CNF = ANDL [Clause] deriving (Show, Eq)
 
 instance Eq Term where
   (Num n) == (Num m) = n == m
@@ -48,3 +48,20 @@ instance Show FOL where
   show (And p q) = "(" ++ (show p) ++ " ∧ " ++ (show q) ++ ")"
   show (Exists p) = "∃x(" ++ (show (p (Num 0))) ++ ")"
   show (Forall p) = "∀x(" ++ (show (p (Num 0))) ++ ")"
+
+arity :: FOL -> Integer
+arity (Atom _ ts) = fromIntegral (length ts)
+arity _ = -1
+
+
+isNum :: Term -> Bool
+isNum (Num x) = True
+isNum _ = False
+
+isFun :: Term -> Bool
+isFun (Fun x ts) = True
+isFun _ = False
+
+inFun :: Term -> Term -> Bool
+inFun (Num x) (Num y) = y == x
+inFun (Num x) (Fun y ts) = or (map (inFun (Num x)) ts)

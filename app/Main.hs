@@ -1,5 +1,6 @@
 import Cnf
 import FOL
+import Resolution
 
 main :: IO ()
 main = do
@@ -8,5 +9,6 @@ main = do
   let b = (Not (Exists ( \f -> (And (Atom "Food" [f ]) (Not (Exists (\p -> (And (Atom "Person" [p ]) (Atom "Eats" [p,f])))))))))
   let foodFact = Impl a b
   let newFact = Exists (\z -> (And (Impl a b) (Atom "Rohit" [z]) ))
-  putStrLn $ show $ propList $cnf newFact [] 1 1
+  let axioms =  propList $cnf newFact [] 1 1
+  putStrLn $ show axioms
   return ()
