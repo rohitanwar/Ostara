@@ -6,7 +6,7 @@ import Data.String
 data Term = Num Integer
             | Fun String [Term]
 
-data FOL = Impl FOL FOL |
+data FOL = Impl FOL FOL | Iff FOL FOL |
            Atom String [Term] |
            Not FOL |
            TT | FF |
@@ -22,6 +22,7 @@ instance Eq Term where
   _ == _ = False
 
 instance Eq FOL where
+  (Iff p q) == (Iff r s) = p == r && q == s
   (Impl p q) == (Impl r s) = p == r && q == s
   (Atom p ts) == (Atom q us) = p == q && ts == us
   (Not p) == (Not q) = p == q
@@ -39,6 +40,7 @@ instance Show Term where
   show (Fun f ts) = f ++ "(" ++ (concat $ intersperse "," (map show ts)) ++ ")"
 
 instance Show FOL where
+  show (Iff p q) = "(" ++ (show p) ++ " ↔ " ++ (show q) ++ ")"
   show (Impl p q) = "(" ++ (show p) ++ " -> " ++ (show q) ++ ")"
   show (Atom p ts) = p ++ "(" ++ (concat $ intersperse "," (map show ts)) ++ ")"
   show (Not p) = "¬" ++ (show p)

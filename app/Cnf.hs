@@ -4,6 +4,7 @@ import Data.List
 import FOL
 
 elimImpl :: FOL -> FOL
+elimImpl (Iff p q) = And (elimImpl (Impl p q)) (elimImpl (Impl q p))
 elimImpl (Impl p q) = Or (Not (elimImpl p)) (elimImpl q)
 elimImpl (Not p) = Not (elimImpl p)
 elimImpl (Or p q) = Or (elimImpl p) (elimImpl q)
@@ -82,5 +83,3 @@ orl p = ORL [p]
 propList :: FOL -> CNF
 propList (And p q) = ANDL ( (deconstructCNF (propList p) ) ++ (deconstructCNF (propList q) ) )
 propList p =  ANDL [orl p]
-
-
