@@ -13,8 +13,13 @@ data FOL = Impl FOL FOL | Iff FOL FOL |
            Or FOL FOL | And FOL FOL |
            Exists (Term -> FOL) | Forall (Term -> FOL)
 
-data Clause = ORL [FOL] deriving (Show, Eq)
-data CNF = ANDL [Clause] deriving (Show, Eq)
+data Lit = Pos FOL | Neg FOL deriving (Show, Eq)
+
+type Clause = [Lit]
+type CNF = [Clause]
+
+-- data Clause = ORL [FOL] deriving (Show, Eq)
+-- data CNF = ANDL [Clause] deriving (Show, Eq)
 
 instance Eq Term where
   (Num n) == (Num m) = n == m
@@ -67,3 +72,7 @@ isFun _ = False
 inFun :: Term -> Term -> Bool
 inFun (Num x) (Num y) = y == x
 inFun (Num x) (Fun y ts) = or (map (inFun (Num x)) ts)
+
+negatedLiteral :: Lit -> Lit
+negatedLiteral (Pos p) = Neg p
+negatedLiteral (Neg p) = Pos p

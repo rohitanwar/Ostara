@@ -3,42 +3,59 @@ module Resolution where
 import FOL 
 import Cnf
 import Subst
+import Data.List
+import Data.Maybe
 
-data Resolved = Resolved Clause Subst
+data Resolved = Resolved (Lit,Lit) Subst deriving (Show)
+
+-- data ProofStep = ProofStep {
+--     left :: Clause,
+--     right :: Clause,
+--     resolvent :: Clause,
+--     substitution :: Subst,
+--     prev :: ProofStep
+-- } | Start
+
+-- type Proof = [ProofStep]
+
+-- makeProof :: ProofStep -> Proof
+-- makeProof = reverse . makeProof'
+--     where makeProof' Start = []
+--           makeProof' p = p : makeProof' (prev p)
+
+cleanCNF :: CNF -> CNF
+cleanCNF clauses = nub $ mapMaybe cleanClause clauses
+
+cleanClause :: Clause -> Maybe Clause
+cleanClause literals
+    | tautology = Nothing
+    | otherwise = Just $ [Pos a | a <- positives] ++ [Neg a | a <- negatives]
+    where
+        tautology = any (\a -> negatedLiteral a `elem` literals) literals
+        positives = nub $ [a | Pos a <- literals]
+        negatives = nub $ [a | Neg a <- literals]
 
 resolvedSubst :: Resolved -> Subst
 resolvedSubst (Resolved _ s) = s
 
-resolvedClause :: Resolved -> Clause
-resolvedClause (Resolved c _) = c
+resolvedLit :: Resolved -> (Lit,Lit)
+resolvedLit (Resolved c _) = c
 
-addTerm :: Resolved -> FOL -> Resolved
-addTerm (Resolved (ORL c) s) f = Resolved (ORL (f:c)) s
+resolve :: CNF -> CNF
+resolve clauses =
+    if changed then resolve newClauses else newClauses
+    where
+        newClauses = resolveCNF clauses
+        changed = ((length newClauses) /= (length clauses)) || not ([] `elem` newClauses)
 
-addTerms :: Resolved -> [FOL] -> Resolved
-addTerms r [] = r
-addTerms r (t:ts) = addTerms (addTerm r t) ts
+resolveCNF :: CNF -> CNF
+resolveCNF clauses = cleanCNF (clauses ++ [a | Just a <- resolvents])
+    where resolvents = [resolvePair a b | a <- clauses, b <- clauses, a /= b]
 
-resolvable :: Clause -> Clause -> Resolved
-
-resolvable (ORL []) (ORL []) = Resolved (ORL []) (Subst [])
-resolvable (ORL []) _ = Resolved (ORL []) (Subst [])
-resolvable _ (ORL []) = Resolved (ORL []) (Subst [])
-resolvable (ORL (f:fs)) (ORL g)
-    | not (isNull (resolvedSubst (resolvable' f (ORL g)))) = addTerms (resolvable' f (ORL g)) fs
-    | not (isNull (resolvedSubst (resolvable (ORL fs) (ORL g)))) = addTerm (resolvable (ORL fs) (ORL g)) f
-    | otherwise = Resolved (ORL (f:fs)) (Subst [])
-
-resolvable' :: FOL -> Clause -> Resolved
-
-resolvable' f (ORL []) = Resolved (ORL []) (Subst [])
-resolvable' f (ORL (g:gs))
-    | not (isNull (resolver f g)) = Resolved (substituteClause (resolver f g) (ORL (gs))) (resolver f g) 
-    | not (isNull (resolvedSubst (resolvable' f (ORL gs)))) = addTerm (resolvable' f (ORL gs)) g
-    | otherwise = Resolved (ORL (g:gs)) (Subst [])
-
-resolver :: FOL -> FOL -> Subst
-
-resolver (Not f) g = findSubst f g
-resolver f (Not g) = findSubst f g
-resolver _ _ = Subst []
+resolvePair :: Clause -> Clause -> Maybe Clause
+resolvePair left right = result
+    where
+        substitutions = [Resolved (a,b) (findSubst a (negatedLiteral b)) | a <- left, b <- right, not (isNull (findSubst a (negatedLiteral b)))]
+        result = if null substitutions then Nothing else Just . nub $ (substituteClause (subst) (delete a left ++ delete b right)) 
+            where subst = resolvedSubst (head substitutions)
+                  (a,b) = resolvedLit (head substitutions)

@@ -47,7 +47,7 @@ prenex TT _ = TT
 prenex FF _ = FF
 prenex (And p q) n = And (prenex p (2*n)) (prenex q (2*n+1))
 prenex (Or p q) n = Or (prenex p (2*n)) (prenex q (2*n+1))
-prenex (Forall p) n = p (Num n)
+prenex (Forall p) n = prenex (p (Num n)) (2*n)
 prenex (Atom s ts) n = Atom s ts
 prenex (Not p) n = (Not (prenex p n))
 
@@ -65,21 +65,18 @@ distribute (Atom p ts) = Atom p ts
 
 
 cnf :: FOL -> [Term] -> Integer -> Integer -> FOL
-cnf p ts ud ed = distribute (prenex ((skolem . shiftNot . elimImpl) p ts ed ) ud)
+cnf p ts ud ed = distribute (prenex ((skolem . shiftNot . elimImpl) p ts ed) ud)
 
-test :: FOL -> [Term] -> Integer -> FOL
-test = skolem . shiftNot . elimImpl
+toLiteral :: FOL -> Lit
+toLiteral TT = Pos TT
+toLiteral FF = Neg TT
+toLiteral (Not p) = Neg p
+toLiteral p = Pos p 
 
-deconstructClause :: Clause -> [FOL]
-deconstructClause (ORL fs) = fs
+toClause :: FOL -> Clause
+toClause (Or p q) = toClause p ++ toClause q
+toClause p = [toLiteral p]
 
-deconstructCNF :: CNF -> [Clause]
-deconstructCNF (ANDL fs) = fs
-
-orl :: FOL -> Clause
-orl (Or p q) = ORL ( (deconstructClause (orl p) ) ++ (deconstructClause (orl q) ) )
-orl p = ORL [p]
-
-propList :: FOL -> CNF
-propList (And p q) = ANDL ( (deconstructCNF (propList p) ) ++ (deconstructCNF (propList q) ) )
-propList p =  ANDL [orl p]
+toCNF :: FOL -> CNF
+toCNF (And p q) = toCNF p ++ toCNF q
+toCNF p = [toClause p]
