@@ -76,3 +76,19 @@ inFun (Num x) (Fun y ts) = or (map (inFun (Num x)) ts)
 negatedLiteral :: Lit -> Lit
 negatedLiteral (Pos p) = Neg p
 negatedLiteral (Neg p) = Pos p
+
+replaceVarWithTerm :: FOL -> Term -> Term -> FOL
+replaceVarWithTerm f v t = case f of
+  Atom p ts -> Atom p (map (replaceVarWithTerm' v t) ts)
+  Not p -> Not (replaceVarWithTerm p v t)
+  TT -> TT
+  FF -> FF
+  Or p q -> Or (replaceVarWithTerm p v t) (replaceVarWithTerm q v t)
+  And p q -> And (replaceVarWithTerm p v t) (replaceVarWithTerm q v t)
+  Impl p q -> Impl (replaceVarWithTerm p v t) (replaceVarWithTerm q v t)
+  Iff p q -> Iff (replaceVarWithTerm p v t) (replaceVarWithTerm q v t)
+  Exists p -> Exists (\x -> replaceVarWithTerm (p x) v t)
+  Forall p -> Forall (\x -> replaceVarWithTerm (p x) v t)
+
+replaceVarWithTerm' :: Term -> Term -> Term -> Term
+replaceVarWithTerm' v t x = if x == v then t else x
