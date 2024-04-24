@@ -1,1 +1,6 @@
-!1 : T(1)
+Axiom := !1 : Food(1) -> Likes(John,1)
+Axiom := Food(Apple) & Food(Vegetable)
+Axiom := !1 : !2 : Eats(1,2) & ~Killed(1) -> Food(2)
+Axiom := Eats(Anil,Peanuts) & Alive(Anil)
+Axiom := !1 : ~Killed(1) <-> Alive(1)
+Conjecture := Likes(John,Peanuts)

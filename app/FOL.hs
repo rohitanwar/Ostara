@@ -18,8 +18,6 @@ data Lit = Pos FOL | Neg FOL deriving (Show, Eq)
 type Clause = [Lit]
 type CNF = [Clause]
 
--- data Clause = ORL [FOL] deriving (Show, Eq)
--- data CNF = ANDL [Clause] deriving (Show, Eq)
 
 instance Eq Term where
   (Num n) == (Num m) = n == m

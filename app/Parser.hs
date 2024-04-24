@@ -259,16 +259,16 @@ module Parser where
   parseFOL = parseParenFOL <|> parseNotFOL <|> parseAtom
 
   parseSentence :: Parser FOL
-  parseSentence = parseForallFOL <|> parseAndFOL <|> parseOrFOL <|> parseImpFOL <|> parseIffFOL <|> parseFOL
+  parseSentence = parseForallFOL <|> parseExistsFOL <|> parseAndFOL <|> parseOrFOL <|> parseImpFOL <|> parseIffFOL <|> parseFOL
 
 
   getOutput :: Maybe (FOL, String) -> FOL
   getOutput (Just (f, _)) = f
   
-  parseLine :: Parser FOL
+  parseLine :: Parser Line
   parseLine = parseAxiom <|> parseConjecture
 
-  parseAxiom :: Parser FOL
+  parseAxiom :: Parser Line
   parseAxiom = do
     parseWhitespace
     string "Axiom"
@@ -277,9 +277,9 @@ module Parser where
     parseWhitespace
     f <- parseSentence
     parseEOL
-    return f
+    return (Axiom f)
 
-  parseConjecture :: Parser FOL
+  parseConjecture :: Parser Line
   parseConjecture = do
     parseWhitespace
     string "Conjecture"
@@ -288,4 +288,9 @@ module Parser where
     parseWhitespace
     f <- parseSentence
     parseEOL
-    return f
+    return (Conjecture f)
+
+  parseSystem :: Parser System
+  parseSystem = do
+    lines <- many parseLine
+    return $ System lines
